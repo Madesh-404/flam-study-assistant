@@ -5,9 +5,9 @@ function NavigationControls({
   totalItems,
   onPrevious,
   onNext,
+  nextLabel = "Next →",
 }) {
   const isFirst = currentIndex === 0;
-  const isLast = currentIndex === totalItems - 1;
 
   return (
     <div className="navigation-controls">
@@ -26,9 +26,8 @@ function NavigationControls({
       <button
         type="button"
         onClick={onNext}
-        disabled={isLast}
       >
-        Next →
+        {nextLabel}
       </button>
     </div>
   );

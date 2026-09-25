@@ -3,8 +3,41 @@ import { useState } from "react";
 import PromptInput from "./components/PromptInput/PromptInput";
 import StudyModeSelector from "./components/StudyModeSelector/StudyModeSelector";
 import FlashcardDeck from "./components/FlashcardDeck/FlashcardDeck";
+import Quiz from "./components/Quiz/Quiz";
 
 import "./App.css";
+
+const mockQuiz = {
+  type: "quiz",
+  title: "JavaScript Basics",
+  questions: [
+    {
+      question: "Which keyword declares a block-scoped variable?",
+      options: ["var", "let", "function", "global"],
+      correctAnswer: "let",
+    },
+    {
+      question: "What does === compare?",
+      options: [
+        "Only value",
+        "Only type",
+        "Value and type",
+        "References only",
+      ],
+      correctAnswer: "Value and type",
+    },
+    {
+      question: "What is a closure?",
+      options: [
+        "A loop",
+        "A function with access to its outer scope",
+        "A class",
+        "A promise",
+      ],
+      correctAnswer: "A function with access to its outer scope",
+    },
+  ],
+};
 
 const mockFlashcards = {
   type: "flashcards",
@@ -32,25 +65,40 @@ function App() {
   const [prompt, setPrompt] = useState("");
   const [mode, setMode] = useState("flashcards");
   const [result, setResult] = useState(null);
+  const [quizAnswers, setQuizAnswers] = useState(null);
 
-  function handleGenerate() {
-    if (mode === "flashcards") {
-      setResult(mockFlashcards);
-    }
+function handleGenerate() {
+  if (mode === "flashcards") {
+    setResult(mockFlashcards);
   }
 
-  if (result) {
-    return (
-      <main className="app">
-        <FlashcardDeck data={result} />
-      </main>
-    );
+  if (mode === "quiz") {
+    setResult(mockQuiz);
   }
+}
 
+if (result?.type === "flashcards") {
+  return (
+    <main className="app">
+      <FlashcardDeck data={result} />
+    </main>
+  );
+}
+
+if (result?.type === "quiz") {
+  return (
+    <main className="app">
+      <Quiz
+        data={result}
+        onComplete={setQuizAnswers}
+      />
+    </main>
+  );
+}
   return (
     <main className="app">
       <section className="hero">
-        <p className="eyebrow">AI STUDY ASSISTANT</p>
+        <p className="title">AI STUDY ASSISTANT</p>
 
         <h1>
           Turn any topic into an interactive study set.
