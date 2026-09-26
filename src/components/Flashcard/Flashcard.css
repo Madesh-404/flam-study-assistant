@@ -74,3 +74,13 @@
   color: #9ca3af;
   font-size: 13px;
 }
+
+@media (max-width: 600px) {
+  .flashcard {
+    min-height: 300px;
+  }
+
+  .flashcard__content {
+    padding: 24px;
+  }
+}

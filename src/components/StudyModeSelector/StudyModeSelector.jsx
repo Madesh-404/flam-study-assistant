@@ -9,6 +9,7 @@ function StudyModeSelector({ mode, onChange }) {
         <button
           type="button"
           className={mode === "flashcards" ? "active" : ""}
+          aria-pressed={mode === "flashcards"}
           onClick={() => onChange("flashcards")}
         >
           <strong>Flashcards</strong>
@@ -18,6 +19,7 @@ function StudyModeSelector({ mode, onChange }) {
         <button
           type="button"
           className={mode === "quiz" ? "active" : ""}
+          aria-pressed={mode === "flashcards"}
           onClick={() => onChange("quiz")}
         >
           <strong>Quiz</strong>

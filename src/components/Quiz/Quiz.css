@@ -52,3 +52,17 @@
 
   transition: width 0.3s ease;
 }
+
+@media (max-width: 600px) {
+  .quiz {
+    padding: 20px 16px;
+  }
+
+  .quiz__header {
+    gap: 12px;
+  }
+
+  .quiz__header h1 {
+    font-size: 1.5rem;
+  }
+}

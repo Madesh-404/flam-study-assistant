@@ -12,7 +12,6 @@ import { validateStudyResult } from "./lib/validateResult";
 import "./App.css";
 
 function App() {
-
   const requestControllerRef = useRef(null);
   const requestIdRef = useRef(0);
 
@@ -24,190 +23,184 @@ function App() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
-useEffect(() => {
-  return () => {
-    requestControllerRef.current?.abort();
-  };
-}, []);
+  useEffect(() => {
+    return () => {
+      requestControllerRef.current?.abort();
+    };
+  }, []);
 
-async function handleGenerate() {
-  if (!prompt.trim()) {
-    return;
+  function handleExitSession() {
+    setResult(null);
+    setActiveQuiz(null);
+    setQuizResult(null);
+    setStatus("idle");
+    setError("");
   }
 
-  // Cancel the previous request
-  requestControllerRef.current?.abort();
-
-  const controller = new AbortController();
-
-  requestControllerRef.current = controller;
-
-  const requestId = ++requestIdRef.current;
-
-  // Abort requests that take longer than 15 seconds
-  const timeoutId = setTimeout(() => {
-    controller.abort("TIMEOUT");
-  }, 15000);
-
-  setStatus("loading");
-  setError("");
-
-  try {
-    const result = await generateStudySet({
-      prompt: prompt.trim(),
-      mode,
-      signal: controller.signal,
-    });
-
-    if (requestId !== requestIdRef.current) {
+  async function handleGenerate() {
+    if (!prompt.trim()) {
       return;
     }
 
-    if (!validateStudyResult(result, mode)) {
-      throw new Error(
-        "The server returned invalid study data."
-      );
-    }
+    // Cancel the previous request
+    requestControllerRef.current?.abort();
 
-    setResult(result);
+    const controller = new AbortController();
 
-    if (result.type === "quiz") {
-      setActiveQuiz(result);
-      setQuizResult(null);
-    }
+    requestControllerRef.current = controller;
 
-    setStatus("success");
-  } catch (error) {
-    if (requestId !== requestIdRef.current) {
-      return;
-    }
+    const requestId = ++requestIdRef.current;
 
-    if (controller.signal.aborted) {
-      if (controller.signal.reason === "TIMEOUT") {
-        setError(
-          "The request took too long. Please try again."
-        );
-        setStatus("error");
+    // Abort requests that take longer than 15 seconds
+    const timeoutId = setTimeout(() => {
+      controller.abort("TIMEOUT");
+    }, 15000);
+
+    setStatus("loading");
+    setError("");
+
+    try {
+      const result = await generateStudySet({
+        prompt: prompt.trim(),
+        mode,
+        signal: controller.signal,
+      });
+
+      if (requestId !== requestIdRef.current) {
+        return;
       }
 
-      return;
-    }
+      if (!validateStudyResult(result, mode)) {
+        throw new Error("The server returned invalid study data.");
+      }
 
-    console.error(error);
+      setResult(result);
 
-    setError(
-      error.message ||
-        "Something went wrong while generating your study set."
-    );
+      if (result.type === "quiz") {
+        setActiveQuiz(result);
+        setQuizResult(null);
+      }
 
-    setStatus("error");
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
+      setStatus("success");
+    } catch (error) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
 
-function handleQuizComplete(results) {
-  setQuizResult(results);
-}
-
-if (status === "loading") {
-  return (
-    <main className="app">
-      <LoadingState />
-    </main>
-  );
-}
-
-if (status === "error") {
-  return (
-    <main className="app">
-      <ErrorState
-        message={error}
-        onRetry={handleGenerate}
-        onBack={() => {
-          setStatus("idle");
-        }}
-      />
-    </main>
-  );
-}
-
-if (result?.type === "flashcards") {
-  return (
-    <main className="app">
-      <FlashcardDeck data={result} />
-    </main>
-  );
-}
-
-if (result?.type === "quiz" && quizResult) {
-  return (
-    <main className="app">
-      <ScoreCard
-        score={quizResult.score}
-        total={result.questions.length}
-        incorrectCount={
-          quizResult.incorrectQuestions.length
+      if (controller.signal.aborted) {
+        if (controller.signal.reason === "TIMEOUT") {
+          setError("The request took too long. Please try again.");
+          setStatus("error");
         }
-        onRetryIncorrect={() => {
-          const retryQuiz = {
-            ...activeQuiz,
-            questions: quizResult.incorrectQuestions,
-          };
 
-          setActiveQuiz(retryQuiz);
-          setQuizResult(null);
-        }}
-        onRetake={() => {
-          setActiveQuiz(result);
-          setQuizResult(null);
-        }}
-        onNewStudySet={() => {
-          setResult(null);
-          setActiveQuiz(null);
-          setQuizResult(null);
-        }}
-      />
-    </main>
-  );
-}
+        return;
+      }
 
-if (result?.type === "quiz" && activeQuiz) {
-  return (
-    <main className="app">
-      <Quiz
-        key={activeQuiz.questions.length}
-        data={activeQuiz}
-        onComplete={handleQuizComplete}
-      />
-    </main>
-  );
-}
+      console.error(error);
+
+      setError(
+        error.message ||
+          "Something went wrong while generating your study set.",
+      );
+
+      setStatus("error");
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  function handleQuizComplete(results) {
+    setQuizResult(results);
+  }
+
+  if (status === "loading") {
+    return (
+      <main className="app">
+        <LoadingState />
+      </main>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <main className="app">
+        <ErrorState
+          message={error}
+          onRetry={handleGenerate}
+          onBack={() => {
+            setStatus("idle");
+          }}
+        />
+      </main>
+    );
+  }
+
+  if (result?.type === "flashcards") {
+    return (
+      <main className="app">
+        <FlashcardDeck data={result} onExit={handleExitSession} />
+      </main>
+    );
+  }
+
+  if (result?.type === "quiz" && quizResult) {
+    return (
+      <main className="app">
+        <ScoreCard
+          score={quizResult.score}
+          total={quizResult.total}
+          incorrectCount={quizResult.incorrectQuestions.length}
+          onRetryIncorrect={() => {
+            const retryQuiz = {
+              ...activeQuiz,
+              questions: quizResult.incorrectQuestions,
+            };
+
+            setActiveQuiz(retryQuiz);
+            setQuizResult(null);
+          }}
+          onRetake={() => {
+            setActiveQuiz(result);
+            setQuizResult(null);
+          }}
+          onNewStudySet={() => {
+            setResult(null);
+            setActiveQuiz(null);
+            setQuizResult(null);
+          }}
+        />
+      </main>
+    );
+  }
+
+  if (result?.type === "quiz" && activeQuiz) {
+    return (
+      <main className="app">
+        <Quiz
+          key={activeQuiz.questions.length}
+          data={activeQuiz}
+          onComplete={handleQuizComplete}
+          onExit={handleExitSession}
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="app">
       <section className="hero">
         <p className="title">AI STUDY ASSISTANT</p>
 
-        <h1>
-          Turn any topic into an interactive study set.
-        </h1>
+        <h1>Turn any topic into an interactive study set.</h1>
 
         <p className="subtitle">
-          Generate flashcards or quizzes from your notes,
-          topic, or question.
+          Generate flashcards or quizzes from your notes, topic, or question.
         </p>
 
         <div className="study-form">
-          <PromptInput
-            value={prompt}
-            onChange={setPrompt}
-          />
+          <PromptInput value={prompt} onChange={setPrompt} />
 
-          <StudyModeSelector
-            mode={mode}
-            onChange={setMode}
-          />
+          <StudyModeSelector mode={mode} onChange={setMode} />
 
           <button
             className="generate-button"

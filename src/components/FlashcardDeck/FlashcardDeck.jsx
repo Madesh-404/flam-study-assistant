@@ -5,7 +5,7 @@ import NavigationControls from "../NavigationControls/NavigationControls";
 
 import "./FlashcardDeck.css";
 
-function FlashcardDeck({ data }) {
+function FlashcardDeck({ data, onExit }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentCard = data.cards[currentIndex];
@@ -44,6 +44,7 @@ function FlashcardDeck({ data }) {
         onPrevious={handlePrevious}
         nextDisabled={currentIndex === data.cards.length - 1}
         onNext={handleNext}
+        onExit={onExit}
       />
     </section>
   );

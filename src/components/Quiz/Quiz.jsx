@@ -5,7 +5,7 @@ import NavigationControls from "../NavigationControls/NavigationControls";
 
 import "./Quiz.css";
 
-function Quiz({ data, onComplete }) {
+function Quiz({ data, onComplete, onExit }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [answers, setAnswers] = useState(
@@ -30,6 +30,7 @@ function Quiz({ data, onComplete }) {
 
   return {
     score,
+    total: data.questions.length,
     incorrectQuestions,
    };
   }
@@ -114,6 +115,7 @@ function Quiz({ data, onComplete }) {
           ? "Finish →"
           : "Next →"
       }
+      onExit={onExit}
     />
     </section>
   );

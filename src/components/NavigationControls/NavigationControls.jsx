@@ -5,24 +5,37 @@ function NavigationControls({
   totalItems,
   onPrevious,
   onNext,
+  nextDisabled,
   nextLabel = "Next →",
-  nextDisabled = false,
+  onExit,
 }) {
-  const isFirst = currentIndex === 0;
-
   return (
     <div className="navigation-controls">
-      <button type="button" onClick={onPrevious} disabled={isFirst}>
+      <button
+        type="button"
+        onClick={onExit}
+        className="navigation-controls__exit"
+      >
+        Exit
+      </button>
+
+      <div className="navigation-controls__right">
+        <button
+          type="button"
+          onClick={onPrevious}
+          disabled={currentIndex === 0}
+      >
         ← Previous
       </button>
 
-      <span>
-        {currentIndex + 1} / {totalItems}
-      </span>
-
-      <button type="button" onClick={onNext} disabled={nextDisabled}>
-        {nextLabel}
-      </button>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={nextDisabled}
+        >
+          {nextLabel}
+        </button>
+      </div>
     </div>
   );
 }
