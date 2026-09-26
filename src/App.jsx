@@ -5,6 +5,8 @@ import StudyModeSelector from "./components/StudyModeSelector/StudyModeSelector"
 import FlashcardDeck from "./components/FlashcardDeck/FlashcardDeck";
 import Quiz from "./components/Quiz/Quiz";
 import ScoreCard from "./components/ScoreCard/ScoreCard";
+import LoadingState from "./components/LoadingState/LoadingState";
+import ErrorState from "./components/ErrorState/ErrorState";
 
 import "./App.css";
 
@@ -69,22 +71,61 @@ function App() {
   const [quizAnswers, setQuizAnswers] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
+  const [status, setStatus] = useState("error");
+  const [error, setError] = useState("");
 
 function handleGenerate() {
-  if (mode === "flashcards") {
-    setResult(mockFlashcards);
+  if (!prompt.trim()) {
     return;
   }
 
-  if (mode === "quiz") {
-    setResult(mockQuiz);
-    setActiveQuiz(mockQuiz);
-    setQuizResult(null);
-  }
+  setStatus("loading");
+  setError("");
+
+  setTimeout(() => {
+    try {
+      if (mode === "flashcards") {
+        setResult(mockFlashcards);
+      } else {
+        setResult(mockQuiz);
+        setActiveQuiz(mockQuiz);
+        setQuizResult(null);
+      }
+
+      setStatus("success");
+    } catch {
+      setStatus("error");
+      setError(
+        "Something went wrong while creating your study set."
+      );
+    }
+  }, 1500);
 }
 
 function handleQuizComplete(results) {
   setQuizResult(results);
+}
+
+if (status === "loading") {
+  return (
+    <main className="app">
+      <LoadingState />
+    </main>
+  );
+}
+
+if (status === "error") {
+  return (
+    <main className="app">
+      <ErrorState
+        message={error}
+        onRetry={handleGenerate}
+        onBack={() => {
+          setStatus("idle");
+        }}
+      />
+    </main>
+  );
 }
 
 if (result?.type === "flashcards") {
