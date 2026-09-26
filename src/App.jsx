@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import PromptInput from "./components/PromptInput/PromptInput";
 import StudyModeSelector from "./components/StudyModeSelector/StudyModeSelector";
 import FlashcardDeck from "./components/FlashcardDeck/FlashcardDeck";
@@ -7,6 +5,9 @@ import Quiz from "./components/Quiz/Quiz";
 import ScoreCard from "./components/ScoreCard/ScoreCard";
 import LoadingState from "./components/LoadingState/LoadingState";
 import ErrorState from "./components/ErrorState/ErrorState";
+import { useEffect, useRef, useState } from "react";
+import { generateStudySet } from "./lib/api";
+import { validateStudyResult } from "./lib/validateResult";
 
 import "./App.css";
 
@@ -65,41 +66,89 @@ const mockFlashcards = {
 };
 
 function App() {
+
+  const requestControllerRef = useRef(null);
+  const requestIdRef = useRef(0);
+
   const [prompt, setPrompt] = useState("");
   const [mode, setMode] = useState("flashcards");
   const [result, setResult] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
-  const [status, setStatus] = useState("error");
+  const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
-function handleGenerate() {
+useEffect(() => {
+  return () => {
+    requestControllerRef.current?.abort();
+  };
+}, []);
+
+async function handleGenerate() {
   if (!prompt.trim()) {
     return;
   }
 
+  const timeoutId = setTimeout(() => {
+  controller.abort();
+  }, 15000);
+
+  requestControllerRef.current?.abort();
+
+  const controller = new AbortController();
+
+  requestControllerRef.current = controller;
+
+  const requestId = ++requestIdRef.current;
+
   setStatus("loading");
   setError("");
 
-  setTimeout(() => {
-    try {
-      if (mode === "flashcards") {
-        setResult(mockFlashcards);
-      } else {
-        setResult(mockQuiz);
-        setActiveQuiz(mockQuiz);
-        setQuizResult(null);
-      }
+  try {
+    const result = await generateStudySet({
+      prompt: prompt.trim(),
+      mode,
+      signal: controller.signal,
+    });
 
-      setStatus("success");
-    } catch {
-      setStatus("error");
-      setError(
-        "Something went wrong while creating your study set."
+    if (requestId !== requestIdRef.current) {
+      return;
+    }
+
+    if (!validateStudyResult(result, mode)) {
+      throw new Error(
+        "The server returned invalid study data."
       );
     }
-  }, 1500);
+
+    setResult(result);
+    if (result.type === "quiz") {
+      setActiveQuiz(result);
+      setQuizResult(null);
+    }
+    setStatus("success");
+
+  } catch (error) {
+    if (controller.signal.aborted) {
+      return;
+    }
+
+    if (requestId !== requestIdRef.current) {
+      return;
+    }
+
+    console.error(error);
+
+    setError(
+      error.message ||
+        "Something went wrong while generating your study set."
+    );
+
+    setStatus("error");
+  } finally {
+      clearTimeout(timeoutId);
+  }
 }
 
 function handleQuizComplete(results) {
@@ -168,7 +217,7 @@ if (result?.type === "quiz" && quizResult) {
   );
 }
 
-if (result?.type === "quiz") {
+if (result?.type === "quiz" && activeQuiz) {
   return (
     <main className="app">
       <Quiz
