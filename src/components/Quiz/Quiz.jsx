@@ -12,6 +12,28 @@ function Quiz({ data, onComplete }) {
     Array(data.questions.length).fill(null)
   );
 
+  function calculateResults() {
+  let score = 0;
+
+  answers.forEach((answer, index) => {
+    if (
+      answer === data.questions[index].correctAnswer
+    ) {
+      score++;
+    }
+  });
+
+  const incorrectQuestions = data.questions.filter(
+    (question, index) =>
+      answers[index] !== question.correctAnswer
+  );
+
+  return {
+    score,
+    incorrectQuestions,
+   };
+  }
+
   const currentQuestion = data.questions[currentIndex];
 
   function handleSelectAnswer(answer) {
@@ -33,7 +55,10 @@ function Quiz({ data, onComplete }) {
       currentIndex === data.questions.length - 1;
 
     if (isLastQuestion) {
-      onComplete(answers);
+      const results = calculateResults();
+
+      onComplete(results);
+
       return;
     }
 

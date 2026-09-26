@@ -4,6 +4,7 @@ import PromptInput from "./components/PromptInput/PromptInput";
 import StudyModeSelector from "./components/StudyModeSelector/StudyModeSelector";
 import FlashcardDeck from "./components/FlashcardDeck/FlashcardDeck";
 import Quiz from "./components/Quiz/Quiz";
+import ScoreCard from "./components/ScoreCard/ScoreCard";
 
 import "./App.css";
 
@@ -66,15 +67,24 @@ function App() {
   const [mode, setMode] = useState("flashcards");
   const [result, setResult] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState(null);
+  const [quizResult, setQuizResult] = useState(null);
+  const [activeQuiz, setActiveQuiz] = useState(null);
 
 function handleGenerate() {
   if (mode === "flashcards") {
     setResult(mockFlashcards);
+    return;
   }
 
   if (mode === "quiz") {
     setResult(mockQuiz);
+    setActiveQuiz(mockQuiz);
+    setQuizResult(null);
   }
+}
+
+function handleQuizComplete(results) {
+  setQuizResult(results);
 }
 
 if (result?.type === "flashcards") {
@@ -85,16 +95,50 @@ if (result?.type === "flashcards") {
   );
 }
 
-if (result?.type === "quiz") {
+if (result?.type === "quiz" && quizResult) {
   return (
     <main className="app">
-      <Quiz
-        data={result}
-        onComplete={setQuizAnswers}
+      <ScoreCard
+        score={quizResult.score}
+        total={activeQuiz.questions.length}
+        incorrectCount={
+          quizResult.incorrectQuestions.length
+        }
+        onRetryIncorrect={() => {
+          const retryQuiz = {
+            ...activeQuiz,
+            questions: quizResult.incorrectQuestions,
+          };
+
+          setActiveQuiz(retryQuiz);
+          setQuizResult(null);
+        }}
+        onRetake={() => {
+          setActiveQuiz(result);
+          setQuizResult(null);
+        }}
+        onNewStudySet={() => {
+          setResult(null);
+          setActiveQuiz(null);
+          setQuizResult(null);
+        }}
       />
     </main>
   );
 }
+
+if (result?.type === "quiz") {
+  return (
+    <main className="app">
+      <Quiz
+        key={activeQuiz.questions.length}
+        data={activeQuiz}
+        onComplete={handleQuizComplete}
+      />
+    </main>
+  );
+}
+
   return (
     <main className="app">
       <section className="hero">
