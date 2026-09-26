@@ -1,5 +1,5 @@
 import "./NavigationControls.css";
-
+import { useEffect } from "react";
 function NavigationControls({
   currentIndex,
   totalItems,
@@ -9,6 +9,38 @@ function NavigationControls({
   nextLabel = "Next →",
   onExit,
 }) {
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "ArrowLeft") {
+        if (currentIndex > 0) {
+          onPrevious();
+        }
+      }
+
+      if (event.key === "ArrowRight") {
+        if (!nextDisabled) {
+          onNext();
+        }
+      }
+
+      if (event.key === "Escape") {
+        onExit();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    currentIndex,
+    nextDisabled,
+    onPrevious,
+    onNext,
+    onExit,
+  ]);
+
   return (
     <div className="navigation-controls">
       <button

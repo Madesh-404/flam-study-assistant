@@ -42,7 +42,7 @@ function App() {
       return;
     }
 
-    // Cancel the previous request
+    
     requestControllerRef.current?.abort();
 
     const controller = new AbortController();
@@ -51,7 +51,7 @@ function App() {
 
     const requestId = ++requestIdRef.current;
 
-    // Abort requests that take longer than 15 seconds
+   
     const timeoutId = setTimeout(() => {
       controller.abort("TIMEOUT");
     }, 15000);
