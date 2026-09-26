@@ -15,6 +15,10 @@ function FlashcardDeck({ data }) {
   }
 
   function handleNext() {
+    if (currentIndex === data.cards.length - 1) {
+      return;
+    }
+
     setCurrentIndex((current) => current + 1);
   }
 
@@ -22,9 +26,7 @@ function FlashcardDeck({ data }) {
     <section className="flashcard-deck">
       <div className="flashcard-deck__header">
         <div>
-          <p className="flashcard-deck__label">
-            FLASHCARDS
-          </p>
+          <p className="flashcard-deck__label">FLASHCARDS</p>
 
           <h1>{data.title}</h1>
         </div>
@@ -40,6 +42,7 @@ function FlashcardDeck({ data }) {
         currentIndex={currentIndex}
         totalItems={data.cards.length}
         onPrevious={handlePrevious}
+        nextDisabled={currentIndex === data.cards.length - 1}
         onNext={handleNext}
       />
     </section>

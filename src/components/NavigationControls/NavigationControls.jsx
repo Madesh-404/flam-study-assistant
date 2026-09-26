@@ -6,16 +6,13 @@ function NavigationControls({
   onPrevious,
   onNext,
   nextLabel = "Next →",
+  nextDisabled = false,
 }) {
   const isFirst = currentIndex === 0;
 
   return (
     <div className="navigation-controls">
-      <button
-        type="button"
-        onClick={onPrevious}
-        disabled={isFirst}
-      >
+      <button type="button" onClick={onPrevious} disabled={isFirst}>
         ← Previous
       </button>
 
@@ -23,10 +20,7 @@ function NavigationControls({
         {currentIndex + 1} / {totalItems}
       </span>
 
-      <button
-        type="button"
-        onClick={onNext}
-      >
+      <button type="button" onClick={onNext} disabled={nextDisabled}>
         {nextLabel}
       </button>
     </div>

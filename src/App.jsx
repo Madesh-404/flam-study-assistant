@@ -11,60 +11,6 @@ import { validateStudyResult } from "./lib/validateResult";
 
 import "./App.css";
 
-const mockQuiz = {
-  type: "quiz",
-  title: "JavaScript Basics",
-  questions: [
-    {
-      question: "Which keyword declares a block-scoped variable?",
-      options: ["var", "let", "function", "global"],
-      correctAnswer: "let",
-    },
-    {
-      question: "What does === compare?",
-      options: [
-        "Only value",
-        "Only type",
-        "Value and type",
-        "References only",
-      ],
-      correctAnswer: "Value and type",
-    },
-    {
-      question: "What is a closure?",
-      options: [
-        "A loop",
-        "A function with access to its outer scope",
-        "A class",
-        "A promise",
-      ],
-      correctAnswer: "A function with access to its outer scope",
-    },
-  ],
-};
-
-const mockFlashcards = {
-  type: "flashcards",
-  title: "JavaScript Closures",
-  cards: [
-    {
-      question: "What is a closure?",
-      answer:
-        "A closure is a function bundled with its lexical environment.",
-    },
-    {
-      question: "Why are closures useful?",
-      answer:
-        "They allow functions to remember and access variables from their outer scope.",
-    },
-    {
-      question: "What is lexical scope?",
-      answer:
-        "Lexical scope determines variable accessibility based on where code is written.",
-    },
-  ],
-};
-
 function App() {
 
   const requestControllerRef = useRef(null);
@@ -73,10 +19,9 @@ function App() {
   const [prompt, setPrompt] = useState("");
   const [mode, setMode] = useState("flashcards");
   const [result, setResult] = useState(null);
-  const [quizAnswers, setQuizAnswers] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
 
 useEffect(() => {
@@ -90,10 +35,7 @@ async function handleGenerate() {
     return;
   }
 
-  const timeoutId = setTimeout(() => {
-  controller.abort();
-  }, 15000);
-
+  // Cancel the previous request
   requestControllerRef.current?.abort();
 
   const controller = new AbortController();
@@ -101,6 +43,11 @@ async function handleGenerate() {
   requestControllerRef.current = controller;
 
   const requestId = ++requestIdRef.current;
+
+  // Abort requests that take longer than 15 seconds
+  const timeoutId = setTimeout(() => {
+    controller.abort("TIMEOUT");
+  }, 15000);
 
   setStatus("loading");
   setError("");
@@ -123,18 +70,26 @@ async function handleGenerate() {
     }
 
     setResult(result);
+
     if (result.type === "quiz") {
       setActiveQuiz(result);
       setQuizResult(null);
     }
-    setStatus("success");
 
+    setStatus("success");
   } catch (error) {
-    if (controller.signal.aborted) {
+    if (requestId !== requestIdRef.current) {
       return;
     }
 
-    if (requestId !== requestIdRef.current) {
+    if (controller.signal.aborted) {
+      if (controller.signal.reason === "TIMEOUT") {
+        setError(
+          "The request took too long. Please try again."
+        );
+        setStatus("error");
+      }
+
       return;
     }
 
@@ -147,7 +102,7 @@ async function handleGenerate() {
 
     setStatus("error");
   } finally {
-      clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
   }
 }
 
@@ -190,7 +145,7 @@ if (result?.type === "quiz" && quizResult) {
     <main className="app">
       <ScoreCard
         score={quizResult.score}
-        total={activeQuiz.questions.length}
+        total={result.questions.length}
         incorrectCount={
           quizResult.incorrectQuestions.length
         }

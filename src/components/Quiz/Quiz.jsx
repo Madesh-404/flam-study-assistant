@@ -51,6 +51,12 @@ function Quiz({ data, onComplete }) {
   }
 
   function handleNext() {
+  
+    const currentAnswer = answers[currentIndex];
+    if (!currentAnswer) {
+      return;
+    }
+
     const isLastQuestion =
       currentIndex === data.questions.length - 1;
 
@@ -97,17 +103,18 @@ function Quiz({ data, onComplete }) {
         onSelectAnswer={handleSelectAnswer}
       />
 
-      <NavigationControls
-        currentIndex={currentIndex}
-        totalItems={data.questions.length}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-        nextLabel={
-          currentIndex === data.questions.length - 1
-            ? "Finish →"
-            : "Next →"
-        }
-/>
+    <NavigationControls
+      currentIndex={currentIndex}
+      totalItems={data.questions.length}
+      onPrevious={handlePrevious}
+      onNext={handleNext}
+      nextDisabled={!answers[currentIndex]}
+      nextLabel={
+        currentIndex === data.questions.length - 1
+          ? "Finish →"
+          : "Next →"
+      }
+    />
     </section>
   );
 }
