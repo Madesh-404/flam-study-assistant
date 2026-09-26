@@ -19,6 +19,7 @@ The application does not behave like a chatbot. Instead, the AI returns structur
 * Protection against stale API responses
 * AI response validation
 * Responsive layout for mobile devices
+* Keyboard navigation
 
 ## Tech Stack
 
